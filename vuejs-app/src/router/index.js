@@ -32,6 +32,11 @@ const router = createRouter({
       component: Dashboard,
       meta: { guarded: true },
     },
+    // {
+    //   path: '/verify-email',
+    //   name: 'auth.verify-email',
+    //   component: () => import('@/components/auth/VerifyEmail.vue'),
+    // },
     {
       path: '/:pathMatch(.*)*',
       redirect: '/dashboard',

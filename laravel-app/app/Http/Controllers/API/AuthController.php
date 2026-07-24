@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Requests\User\SendVerificationEmailRequest;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\User\SigninRequest;
 use App\Http\Requests\User\SignupRequest;
 use App\Http\Resources\User\UserResource;
 use App\Models\User;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -25,7 +26,7 @@ class AuthController extends Controller
         $user->sendEmailVerificationNotification($request->callback_url);
 
         return response([
-            'message' => 'User signed up.',
+            'message' => 'User signed up. Please check your email to verify your account.',
             'user' => new UserResource($user)
         ], 201);
     }
@@ -33,12 +34,6 @@ class AuthController extends Controller
     function signin(SigninRequest $request)
     {
         $user = User::where('email', $request->email)->first();
-
-        if (!$user->hasVerifiedEmail()) {
-            throw ValidationException::withMessages([
-                'email' => 'Email is not verified.',
-            ]);
-        }
 
         if (!Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
@@ -58,13 +53,7 @@ class AuthController extends Controller
     function signout(Request $request)
     {
         $user = $request->user();
-
-        // option 1
         $user->currentAccessToken()->delete();
-
-        // option 2
-        $currentToken = $user->currentAccessToken();
-        $user->tokens()->where('id', $currentToken->id)->delete();
 
         return response([
             'message' => 'User signed out.'
@@ -81,35 +70,38 @@ class AuthController extends Controller
 
     function verifyEmail(Request $request)
     {
-        $user = User::findOrFail($request->route('id'));
+        $user = User::find($request->route('id'));
 
-        if ($user->hasVerifiedEmail()) {
-            throw ValidationException::withMessages([
-                'email' => 'Email is already verified.',
-            ]);
+        if (!$user || !hash_equals(sha1($user->getEmailForVerification()), $request->route('hash'))) {
+            abort(403, 'Invalid verification link.');
         }
 
-        $user->markEmailAsVerified();
+        if ($user->hasVerifiedEmail()) {
+            return redirect($request->query('callback', config('app.frontend_url') . '/signin'));
+        }
 
-        return response([
-            'message' => 'Email verified successfully.'
-        ], 200);
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
+        }
+
+        return redirect($request->query('callback', config('app.frontend_url') . '/signin'));
     }
 
-    function sendVerificationEmail(SendVerificationEmailRequest $request)
+    function sendVerificationEmail(Request $request)
     {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'callback_url' => 'required|url',
+        ]);
+
         $user = User::where('email', $request->email)->first();
 
         if ($user->hasVerifiedEmail()) {
-            throw ValidationException::withMessages([
-                'email' => 'Email is already verified.',
-            ]);
+            return response(['message' => 'Email already verified.'], 200);
         }
 
         $user->sendEmailVerificationNotification($request->callback_url);
 
-        return response([
-            'message' => 'Verification email resent.'
-        ], 200);
+        return response(['message' => 'Verification email sent.'], 200);
     }
 }

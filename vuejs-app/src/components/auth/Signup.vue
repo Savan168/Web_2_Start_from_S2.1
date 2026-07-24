@@ -81,6 +81,7 @@ const user = reactive({
   email: "",
   password: "",
   password_confirmation: "",
+  callback_url: window.location.origin + "/verify-email",
 });
 
 const userError = reactive({
