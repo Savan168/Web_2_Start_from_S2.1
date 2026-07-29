@@ -1,6 +1,7 @@
 import Signin from '@/components/auth/Signin.vue';
 import Signout from '@/components/auth/Signout.vue';
 import Signup from '@/components/auth/Signup.vue';
+import VerifyEmail from '@/components/auth/VerifyEmail.vue';
 import Dashboard from '@/components/pages/Dashboard.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
@@ -27,16 +28,17 @@ const router = createRouter({
       meta: { guarded: false },
     },
     {
+      path: '/verify/email',
+      name: 'auth.verify.email',
+      component: VerifyEmail,
+      meta: { guarded: false },
+    },
+    {
       path: '/dashboard',
       name: 'dashboard',
       component: Dashboard,
       meta: { guarded: true },
     },
-    // {
-    //   path: '/verify-email',
-    //   name: 'auth.verify-email',
-    //   component: () => import('@/components/auth/VerifyEmail.vue'),
-    // },
     {
       path: '/:pathMatch(.*)*',
       redirect: '/dashboard',
