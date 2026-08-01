@@ -6,36 +6,28 @@
           <router-link to="/" class="h1"><b>Admin</b>LTE</router-link>
         </div>
         <div class="card-body">
-          <p class="login-box-msg">Enter your new password</p>
-          <form @submit.prevent="setNewPassword">
+          <p class="login-box-msg">Enter your email to receive a password reset link</p>
+          <form @submit.prevent="sendResetPasswordEmail">
             <div class="input-group mb-3">
-              <input v-model="user.password" type="password" class="form-control"
-                :class="{ 'is-invalid': !!userError.password }" placeholder="Password" autocomplete />
+              <input v-model="user.email" :class="{ 'is-invalid': !!userError.email }" type="email" class="form-control"
+                placeholder="Email" />
               <div class="input-group-append">
                 <div class="input-group-text">
-                  <span class="fas fa-lock"></span>
+                  <span class="fas fa-envelope"></span>
                 </div>
               </div>
               <div class="invalid-feedback">
-                {{ userError.password }}
-              </div>
-            </div>
-            <div class="input-group mb-3">
-              <input v-model="user.password_confirmation" type="password" class="form-control"
-                placeholder="Confirm Password" autocomplete />
-              <div class="input-group-append">
-                <div class="input-group-text">
-                  <span class="fas fa-lock"></span>
-                </div>
+                {{ userError.email }}
               </div>
             </div>
             <div class="row">
               <div class="col-8"></div>
               <div class="col-4">
-                <button type="submit" class="btn btn-primary btn-block">Reset</button>
+                <button type="submit" class="btn btn-primary btn-block">Send Link</button>
               </div>
             </div>
           </form>
+
           <p class="mb-1">
             <router-link :to="{ name: 'auth.signin' }" class="text-center">Go back to login</router-link>
           </p>
@@ -47,23 +39,17 @@
     </div>
   </div>
 </template>
-
 <script setup>
-import axios from "axios";
-import Swal from "sweetalert2";
 import { reactive } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { apiSendResetPasswordEmail } from "@/functions/api/auth";
 import { LoadingModal, MessageModal, CloseModal } from "@/functions/swal";
-const route = useRoute();
-const router = useRouter();
 
 const user = reactive({
-  password: "",
-  password_confirmation: "",
+  email: "",
 });
 
 const userError = reactive({
-  password: "",
+  email: "",
 });
 
 const defaultUser = JSON.parse(JSON.stringify(user));
@@ -74,14 +60,12 @@ function resetAllState() {
   Object.assign(userError, defaultUserError);
 }
 
-async function setNewPassword() {
+async function sendResetPasswordEmail() {
   try {
-    LoadingModal('Setting new password...');
-    const response = await axios.post(new URL(route.query['forwarded-url']), user);
+    LoadingModal();
+    const response = await apiSendResetPasswordEmail(user.email);
     resetAllState();
-    await MessageModal({ icon: "success", title: "Success", text: response.data.message }, () => {
-      router.push({ name: 'auth.signin' });
-    });
+    return MessageModal({ icon: "success", title: "Success", text: response.data.message });
   } catch (error) {
     const { response } = error;
     if (!response) {
