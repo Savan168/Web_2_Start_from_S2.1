@@ -5,6 +5,7 @@ import Signout from '@/components/auth/Signout.vue';
 import Signup from '@/components/auth/Signup.vue';
 import VerifyEmail from '@/components/auth/VerifyEmail.vue';
 import GoogleOAuth from '@/components/google-oauth/GoogleOAuth.vue';
+import GithubOAuth from '@/components/google-oauth/GithubOAuth.vue';
 import Dashboard from '@/components/pages/Dashboard.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
@@ -52,6 +53,12 @@ const router = createRouter({
       path: '/google/oauth/callback',
       name: 'auth.google.oauth.callback',
       component: GoogleOAuth,
+      meta: { guarded: false },
+    },
+    {
+      path: '/github/oauth/callback',
+      name: 'auth.github.oauth.callback',
+      component: GithubOAuth,
       meta: { guarded: false },
     },
     {

@@ -2,18 +2,22 @@ import axios from 'axios';
 
 const APP_API_URL = import.meta.env.VITE_APP_API_URL;
 
-const APP_GOOGLE_OAUTH_CALLBACK_URL = import.meta.env.VITE_APP_GOOGLE_OAUTH_CALLBACK_URL;
-
-export async function apiGoogleOAuthRedirect() {
+export async function apiSocialOAuthRedirect(driver) {
   try {
-    return await axios.get(APP_API_URL + '/google/oauth/redirect', { params: { callback_url: APP_GOOGLE_OAUTH_CALLBACK_URL } });
+    const callbackUrl = import.meta.env[`VITE_APP_${driver.toUpperCase()}_OAUTH_CALLBACK_URL`];
+    return await axios.get(APP_API_URL + `/${driver}/oauth/redirect`, {
+      params: {
+        callback_url: callbackUrl
+      }
+    });
   } catch (error) {
     throw error;
   }
 }
-export async function apiGoogleOAuthExchangeToken(token) {
+
+export async function apiSocialOAuthExchangeToken(driver, token) {
   try {
-    return await axios.post(APP_API_URL + '/google/oauth/exchange/token', null, {
+    return await axios.post(APP_API_URL + `/${driver}/oauth/exchange/token`, null, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

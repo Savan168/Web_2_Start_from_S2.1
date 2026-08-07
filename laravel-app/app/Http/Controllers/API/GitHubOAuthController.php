@@ -8,13 +8,13 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Socialite;
 
-class GoogleOAuthController extends Controller
+class GitHubOAuthController extends Controller
 {
-    function googleOAuthRedirect(Request $request)
+    function githubOAuthRedirect(Request $request)
     {
         $callback_url = $request->query('callback_url', '');
 
-        $redirectUrl = Socialite::driver('google')
+        $redirectUrl = Socialite::driver('github')
             ->stateless()
             ->with(['state' => base64_encode($callback_url)])
             ->redirect()
@@ -23,19 +23,19 @@ class GoogleOAuthController extends Controller
         return response(['redirect_url' => $redirectUrl], 200);
     }
 
-    function googleOAuthCallback(Request $request)
+    function githubOAuthCallback(Request $request)
     {
         $callback_url = base64_decode($request->query('state', ''));
         try {
-            $googleUser = Socialite::driver('google')->stateless()->user();
+            $githubUser = Socialite::driver('github')->stateless()->user();
         } catch (\Exception $e) {
-            return redirect($callback_url . '?error=google_oauth_failed');
+            return redirect($callback_url . '?error=github_oauth_failed');
         }
 
         $user = User::firstOrCreate(
-            ['email' => $googleUser->getEmail()],
+            ['email' => $githubUser->getEmail()],
             [
-                'name' => $googleUser->getName(),
+                'name' => $githubUser->getName() ?? $githubUser->getNickname(),
             ]
         );
 
@@ -50,7 +50,7 @@ class GoogleOAuthController extends Controller
         return redirect($callback_url . '?token=' . urlencode($token));
     }
 
-    function googleOAuthExchangeToken(Request $request)
+    function githubOAuthExchangeToken(Request $request)
     {
         $user = $request->user();
 

@@ -44,9 +44,9 @@
             <button @click="googleSignIn()" class="btn btn-block btn-danger">
               <i class="fab fa-google mr-2"></i> Sign in with Google
             </button>
-            <!-- <button @click="googleSignIn()" class="btn btn-block btn-danger">
+            <button @click="githubSignIn()" class="btn btn-block btn-dark">
               <i class="fab fa-github mr-2"></i> Sign in with Github
-            </button> -->
+            </button>
           </div>
           <p class="mb-1">
             <router-link :to="{ name: 'auth.signup' }" class="text-center">Register a new membership</router-link>
@@ -66,7 +66,7 @@ import { reactive } from "vue";
 import { apiSignIn } from "@/functions/api/auth";
 import { LoadingModal, MessageModal, CloseModal } from "@/functions/swal";
 import { useUserStore } from "@/stores/user";
-import { apiGoogleOAuthRedirect } from "@/functions/api/google-oauth";
+import { apiSocialOAuthRedirect } from "@/functions/api/google-oauth";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -120,7 +120,17 @@ async function signIn() {
 const googleSignIn = async () => {
   try {
     LoadingModal();
-    const response = await apiGoogleOAuthRedirect();
+    const response = await apiSocialOAuthRedirect('google');
+    window.location.href = response.data.redirect_url;
+  } catch (error) {
+    return MessageModal({ icon: "error", title: "Error", text: error.response?.data?.message || error.message });
+  }
+};
+
+const githubSignIn = async () => {
+  try {
+    LoadingModal();
+    const response = await apiSocialOAuthRedirect('github');
     window.location.href = response.data.redirect_url;
   } catch (error) {
     return MessageModal({ icon: "error", title: "Error", text: error.response?.data?.message || error.message });
