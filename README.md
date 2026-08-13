@@ -1,10 +1,13 @@
 # ChatSystem
 
 A real-time chat system with **Google OAuth** and **GitHub OAuth** authentication, designed to run easily with Docker Compose.
+
 ##Redirect URIs for Github
 http://localhost:8000/api/github/oauth/callback
+
 ##Redirect URIs for google https://console.cloud.google.com/
 http://localhost:8000/api/google/oauth/callback
+
 ## 🚀 Features
 
 * 🔐 Google OAuth Authentication
