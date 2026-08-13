@@ -15,8 +15,8 @@ onMounted(async () => {
   try {
     LoadingModal("Processing GitHub authentication...");
     const error = route.query.error;
-    if (error === 'github_oauth_failed') {
-      return MessageModal({ icon: "error", title: "Error", text: "GitHub authentication failed. Please try again." }, () => {
+    if (error === 'github_oauth_failed' || error === 'missing_email') {
+      return MessageModal({ icon: "error", title: "Error", text: "GitHub authentication failed. No email address was returned by GitHub. Please try again." }, () => {
         return router.replace({ name: 'auth.signin' });
       });
     }

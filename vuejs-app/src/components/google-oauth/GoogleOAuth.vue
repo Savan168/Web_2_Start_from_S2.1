@@ -15,8 +15,8 @@ onMounted(async () => {
   try {
     LoadingModal("Processing Google authentication...");
     const error = route.query.error;
-    if (error === 'google_oauth_failed') {
-      return MessageModal({ icon: "error", title: "Error", text: "Google authentication failed. Please try again." }, () => {
+    if (error === 'google_oauth_failed' || error === 'missing_email') {
+      return MessageModal({ icon: "error", title: "Error", text: "Google authentication failed. No email address was returned by Google. Please try again." }, () => {
         return router.replace({ name: 'auth.signin' });
       });
     }

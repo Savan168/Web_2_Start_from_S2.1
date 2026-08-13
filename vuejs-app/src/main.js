@@ -25,21 +25,34 @@ router.beforeEach(async (to, from) => {
     return;
   }
 
+  const token = userStore.getSanctumToken();
+
+  if (guarded) {
+    if (!token) {
+      userStore.reset();
+      return { name: 'auth.signin' };
+    }
+    try {
+      const response = await apiVerify(token);
+      const { data } = response;
+      userStore.setState(data.user);
+    } catch (error) {
+      userStore.reset();
+      return { name: 'auth.signin' };
+    }
+    return;
+  }
+
+  // guarded === false
+  if (!token) { // no token, nothing to verify
+    return;
+  }
   try {
-    const token = userStore.getSanctumToken();
     const response = await apiVerify(token);
     const { data } = response;
     userStore.setState(data.user);
-  } catch (error) {
-    if (error.response && error.response.status === 401) {
-      userStore.reset();
-    }
-  }
-
-  if (guarded && !userStore.isAuthenticated) { // if the route is guarded and the user is not authenticated, redirect to signin page
-    return { name: 'auth.signin' };
-  }
-  if (!guarded && userStore.isAuthenticated) { // if the route is not guarded and the user is authenticated, redirect to dashboard page
     return { name: 'dashboard' };
+  } catch (error) {
+    userStore.reset();
   }
 });

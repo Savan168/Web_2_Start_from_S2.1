@@ -17,7 +17,7 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    function signup(SignupRequest $request)
+    public function signup(SignupRequest $request)
     {
         $user = User::create([
             'name' => $request->name,
@@ -29,21 +29,21 @@ class AuthController extends Controller
 
         return response([
             'message' => 'User signed up.',
-            'user' => new UserResource($user)
+            'user' => new UserResource($user),
         ], 201);
     }
 
-    function signin(SigninRequest $request)
+    public function signin(SigninRequest $request)
     {
         $user = User::where('email', $request->email)->first();
 
-        if (!$user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
             throw ValidationException::withMessages([
                 'email' => 'Email is not verified.',
             ]);
         }
 
-        if (!Hash::check($request->password, $user->password)) {
+        if (! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'password' => 'Password does not match.',
             ]);
@@ -54,35 +54,30 @@ class AuthController extends Controller
         return response([
             'message' => 'User signed in.',
             'user' => new UserResource($user),
-            'token' => $token
+            'token' => $token,
         ], 200);
     }
 
-    function signout(Request $request)
+    public function signout(Request $request)
     {
         $user = $request->user();
 
-        // option 1
         $user->currentAccessToken()->delete();
 
-        // option 2
-        $currentToken = $user->currentAccessToken();
-        $user->tokens()->where('id', $currentToken->id)->delete();
-
         return response([
-            'message' => 'User signed out.'
+            'message' => 'User signed out.',
         ], 200);
     }
 
-    function verify(Request $request)
+    public function verify(Request $request)
     {
         return response([
             'message' => 'Token is valid.',
-            'user' => new UserResource($request->user())
+            'user' => new UserResource($request->user()),
         ], 200);
     }
 
-    function verifyEmail(Request $request)
+    public function verifyEmail(Request $request)
     {
         $user = User::findOrFail($request->route('id'));
 
@@ -95,11 +90,11 @@ class AuthController extends Controller
         $user->markEmailAsVerified();
 
         return response([
-            'message' => 'Email verified successfully.'
+            'message' => 'Email verified successfully.',
         ], 200);
     }
 
-    function sendVerificationEmail(SendVerificationEmailRequest $request)
+    public function sendVerificationEmail(SendVerificationEmailRequest $request)
     {
         $user = User::where('email', $request->email)->first();
 
@@ -112,38 +107,32 @@ class AuthController extends Controller
         $user->sendEmailVerificationNotification($request->callback_url);
 
         return response([
-            'message' => 'Verification email resent.'
+            'message' => 'Verification email resent.',
         ], 200);
     }
 
-    function sendResetPasswordEmail(SendResetPasswordEmailRequest $request)
+    public function sendResetPasswordEmail(SendResetPasswordEmailRequest $request)
     {
-        $status = Password::sendResetLink(
+        Password::sendResetLink(
             ['email' => $request->email],
             function ($user, $token) use ($request) {
                 $user->sendPasswordResetNotification($token, $request->callback_url);
             }
         );
 
-        if ($status === Password::RESET_LINK_SENT) {
-            return response([
-                'message' => 'Password reset link sent to your email'
-            ], 200);
-        }
-
         return response([
-            'message' => 'Password reset link sent to your email'
+            'message' => 'If that account exists, a password reset link has been sent to your email.',
         ], 200);
     }
 
-    function setNewPassword(SetNewPasswordRequest $request)
+    public function setNewPassword(SetNewPasswordRequest $request)
     {
         $status = Password::reset(
             [
                 'token' => $request->token,
                 'email' => $request->email,
                 'password' => $request->password,
-                'password_confirmation' => $request->password_confirmation
+                'password_confirmation' => $request->password_confirmation,
             ],
             function ($user, $password) {
                 $user->password = $password;
@@ -159,7 +148,7 @@ class AuthController extends Controller
         }
 
         return response([
-            'message' => 'Password has been reset successfully.'
+            'message' => 'Password has been reset successfully.',
         ], 200);
     }
 }

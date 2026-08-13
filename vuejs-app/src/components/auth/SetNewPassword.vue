@@ -76,8 +76,12 @@ function resetAllState() {
 
 async function setNewPassword() {
   try {
+    const forwardedUrl = route.query['forwarded-url'];
+    if (!forwardedUrl) {
+      return MessageModal({ icon: "error", title: "Error", text: "Invalid or missing password reset link." });
+    }
     LoadingModal('Setting new password...');
-    const response = await axios.post(new URL(route.query['forwarded-url']), user);
+    const response = await axios.post(new URL(forwardedUrl), user);
     resetAllState();
     await MessageModal({ icon: "success", title: "Success", text: response.data.message }, () => {
       router.push({ name: 'auth.signin' });

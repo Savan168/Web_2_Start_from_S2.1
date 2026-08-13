@@ -10,7 +10,7 @@ use Laravel\Socialite\Socialite;
 
 class GitHubOAuthController extends Controller
 {
-    function githubOAuthRedirect(Request $request)
+    public function githubOAuthRedirect(Request $request)
     {
         $callback_url = $request->query('callback_url', '');
 
@@ -23,38 +23,42 @@ class GitHubOAuthController extends Controller
         return response(['redirect_url' => $redirectUrl], 200);
     }
 
-    function githubOAuthCallback(Request $request)
+    public function githubOAuthCallback(Request $request)
     {
         $callback_url = base64_decode($request->query('state', ''));
         try {
             $githubUser = Socialite::driver('github')->stateless()->user();
         } catch (\Exception $e) {
-            return redirect($callback_url . '?error=github_oauth_failed');
+            return redirect($callback_url.'?error=github_oauth_failed');
+        }
+
+        $email = $githubUser->getEmail();
+
+        if (! $email) {
+            return redirect($callback_url.'?error=missing_email');
         }
 
         $user = User::firstOrCreate(
-            ['email' => $githubUser->getEmail()],
+            ['email' => $email],
             [
                 'name' => $githubUser->getName() ?? $githubUser->getNickname(),
             ]
         );
 
-        $user->save();
-
-        if (!$user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
         }
 
         $token = $user->createToken('auth_token', ['exchange-new-token'], now()->addMinutes(5))->plainTextToken;
 
-        return redirect($callback_url . '?token=' . urlencode($token));
+        return redirect($callback_url.'?token='.urlencode($token));
     }
 
-    function githubOAuthExchangeToken(Request $request)
+    public function githubOAuthExchangeToken(Request $request)
     {
         $user = $request->user();
 
-        if (!$user->currentAccessToken()->can('exchange-new-token')) {
+        if (! $user->currentAccessToken()->can('exchange-new-token')) {
             return response(['message' => 'Invalid token.'], 403);
         }
 
@@ -65,7 +69,7 @@ class GitHubOAuthController extends Controller
         return response([
             'message' => 'User signed in.',
             'user' => new UserResource($user),
-            'token' => $token
+            'token' => $token,
         ], 200);
     }
 }

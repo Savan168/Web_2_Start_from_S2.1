@@ -12,8 +12,9 @@ export const LoadingModal = (text = 'Loading...') => {
 export const MessageModal = async (options, callback) => {
   return await Swal.fire({
     ...options,
-    showConfirmButton: false,
-  }).then(async () => {
+    showConfirmButton: true,
+    confirmButtonText: 'OK',
+  }).then(async (result) => {
     if (typeof callback === "function") {
       return await callback();
     }

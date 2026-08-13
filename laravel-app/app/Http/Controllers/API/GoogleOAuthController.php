@@ -10,51 +10,58 @@ use Laravel\Socialite\Socialite;
 
 class GoogleOAuthController extends Controller
 {
-    function googleOAuthRedirect(Request $request)
+    public function googleOAuthRedirect(Request $request)
     {
         $callback_url = $request->query('callback_url', '');
 
         $redirectUrl = Socialite::driver('google')
             ->stateless()
-            ->with(['state' => base64_encode($callback_url)])
+            ->with([
+                'state' => base64_encode($callback_url),
+                'prompt' => 'select_account',
+            ])
             ->redirect()
             ->getTargetUrl();
 
         return response(['redirect_url' => $redirectUrl], 200);
     }
 
-    function googleOAuthCallback(Request $request)
+    public function googleOAuthCallback(Request $request)
     {
         $callback_url = base64_decode($request->query('state', ''));
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
         } catch (\Exception $e) {
-            return redirect($callback_url . '?error=google_oauth_failed');
+            return redirect($callback_url.'?error=google_oauth_failed');
+        }
+
+        $email = $googleUser->getEmail();
+
+        if (! $email) {
+            return redirect($callback_url.'?error=missing_email');
         }
 
         $user = User::firstOrCreate(
-            ['email' => $googleUser->getEmail()],
+            ['email' => $email],
             [
                 'name' => $googleUser->getName(),
             ]
         );
 
-        $user->save();
-
-        if (!$user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
         }
 
         $token = $user->createToken('auth_token', ['exchange-new-token'], now()->addMinutes(5))->plainTextToken;
 
-        return redirect($callback_url . '?token=' . urlencode($token));
+        return redirect($callback_url.'?token='.urlencode($token));
     }
 
-    function googleOAuthExchangeToken(Request $request)
+    public function googleOAuthExchangeToken(Request $request)
     {
         $user = $request->user();
 
-        if (!$user->currentAccessToken()->can('exchange-new-token')) {
+        if (! $user->currentAccessToken()->can('exchange-new-token')) {
             return response(['message' => 'Invalid token.'], 403);
         }
 
@@ -65,7 +72,7 @@ class GoogleOAuthController extends Controller
         return response([
             'message' => 'User signed in.',
             'user' => new UserResource($user),
-            'token' => $token
+            'token' => $token,
         ], 200);
     }
 }

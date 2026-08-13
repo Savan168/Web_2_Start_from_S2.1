@@ -36,8 +36,14 @@ const message = ref("");
 
 onMounted(async () => {
   try {
+    const forwardedUrl = route.query['forwarded-url'];
+    if (!forwardedUrl) {
+      status.value = "error";
+      message.value = "Invalid or missing verification link.";
+      return;
+    }
     LoadingModal('Verifying email...');
-    const response = await axios.get(new URL(route.query['forwarded-url']));
+    const response = await axios.get(new URL(forwardedUrl));
     status.value = "success";
     message.value = response.data.message;
   } catch (error) {
