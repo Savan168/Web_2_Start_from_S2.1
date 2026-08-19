@@ -32,7 +32,11 @@ Before running the project, make sure you have:
 
 ## ⚙️ Environment Configuration
 
-Create a `.env` file in the root directory of the project.
+The backend environment file lives in **`laravel-app/.env`**. It is not committed to the
+repository (your credentials must stay private). On first start, the Laravel container
+automatically creates it by copying `laravel-app/.env.example` if it does not exist.
+
+Open `laravel-app/.env` and set **your own** credentials:
 
 ### Google OAuth
 
@@ -50,23 +54,20 @@ GITHUB_OAUTH_CLIENT_SECRET=your_github_oauth_client_secret
 GITHUB_OAUTH_CALLBACK_URL="${APP_URL}/api/github/oauth/callback"
 ```
 
-### Application URL
-
-Make sure your `.env` also contains your application URL:
+### Mail (email verification / password reset)
 
 ```env
-APP_URL=http://localhost
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_gmail_app_password
 ```
 
-> **Important:** Never commit your real OAuth Client Secret to GitHub. Keep your `.env` file in `.gitignore`.
+### Application URL
 
-Example `.gitignore`:
-
-```gitignore
-.env
-.env.*
-!.env.example
+```env
+APP_URL=http://localhost:8000
 ```
+
+> **Important:** Never commit your real OAuth Client Secret or mail password. `.env` is in `.gitignore` on purpose.
 
 ---
 
@@ -79,7 +80,7 @@ Create OAuth credentials in the **Google Cloud Console**.
 Set the authorized callback URL to:
 
 ```text
-http://localhost/api/google/oauth/callback
+http://localhost:8000/api/google/oauth/callback
 ```
 
 For production, replace `localhost` with your real domain.
@@ -91,7 +92,7 @@ Create an OAuth App in **GitHub Developer Settings**.
 Set the authorization callback URL to:
 
 ```text
-http://localhost/api/github/oauth/callback
+http://localhost:8000/api/github/oauth/callback
 ```
 
 For production:
@@ -107,19 +108,21 @@ https://your-domain.com/api/github/oauth/callback
 Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ChatSystem.git
-cd ChatSystem
+git clone https://github.com/Savan168/Web_2_Start_from_S2.1.git
+cd Web_2_Start_from_S2.1
 ```
 
-Create your environment file:
+Create your backend environment file (do this before the first start so you can fill in your credentials):
 
 ```bash
-cp .env.example .env
+cp laravel-app/.env.example laravel-app/.env
 ```
 
-Edit `.env` and add your OAuth credentials.
+Open `laravel-app/.env` and replace the placeholder values with your own
+Google/GitHub OAuth credentials and Gmail app password.
 
-Then build and start the containers:
+Then build and start the containers (the first start also installs the PHP/NPM dependencies
+and the RoadRunner binary automatically):
 
 ```bash
 docker compose up --build
@@ -130,6 +133,12 @@ Or run the containers in the background:
 ```bash
 docker compose up --build -d
 ```
+
+The application is then available at:
+
+* Frontend: http://localhost:5173
+* API: http://localhost:8000/api
+* phpMyAdmin: http://localhost:9000
 
 ---
 
@@ -176,21 +185,22 @@ docker compose up --build -d
 
 ```text
 ChatSystem/
-├── .env.example
-├── .gitignore
-├── docker-compose.yml
+├── compose.yaml
 ├── README.md
+├── .gitignore
 │
-├── backend/
+├── laravel-app/      # Backend (Laravel + Octane + Sanctum)
+│   ├── .env.example
 │   └── ...
 │
-├── frontend/
+├── vuejs-app/        # Frontend (Vue 3 + Vite)
+│   ├── .env
 │   └── ...
 │
+├── docker/           # Dockerfiles + entrypoint scripts
+├── instructions/
 └── ...
 ```
-
-> The exact structure may vary depending on the backend and frontend technologies used.
 
 ---
 
